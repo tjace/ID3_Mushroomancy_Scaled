@@ -1,0 +1,8 @@
+-1 variety:1 color:1 smell:1 time:2
++1 variety:2 color:1 smell:1 time:1
++1 variety:1 color:2 smell:2 time:2
+-1 variety:2 color:3 smell:1 time:2
++1 variety:3 color:3 smell:2 time:1
+-1 variety:1 color:2 smell:1 time:2
+-1 variety:2 color:2 smell:2 time:1
++1 variety:1 color:1 smell:2 time:2

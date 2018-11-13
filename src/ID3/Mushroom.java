@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 public class Mushroom {
-    private static ArrayList<String> featureList;
+    private static ArrayList<String> featureList = new ArrayList<>();
     public HashMap<String, Integer> features;
     private boolean label;
 

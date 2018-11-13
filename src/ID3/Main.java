@@ -15,25 +15,28 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String fileName;
         if (args.length == 0)
-            fileName = "src/diabetes.train";
+            fileName = "src/Mango.csv";
         else
             fileName = args[0];
+
+        //createShrooms("src/train.csv");
+        ArrayList<Mushroom> trainShrooms = Utils.readExamples(fileName);
 
         //Add the many lists to featureList
         featureList = new HashMap<>();
         for (String feat : Mushroom.getFeatureList()) {
             featureList.put(feat, new ArrayList<>());
         }
-
-        //createShrooms("src/train.csv");
-        ArrayList<Mushroom> trainShrooms = Utils.readExamples(fileName);
-
         ArrayList<Mushroom> shrooms = new ArrayList<>(trainShrooms);
 
         for (Mushroom mush : trainShrooms) {
 
             //Grab each unique value for each feature, and add it to featureList
             for (String eachFeature : mush.features.keySet()) {
+
+
+                ArrayList<Integer> test = featureList.get(eachFeature); //this is null?
+
 
                 if (!featureList.get(eachFeature).contains(mush.getAtt(eachFeature)))
                     featureList.get(eachFeature).add(mush.getAtt(eachFeature));
@@ -85,11 +88,11 @@ public class Main {
 
         //Determine best feature to discriminate by at this point
         //Using InfoGain
-        String bestFeature = "";
+        String bestFeature = "no";
 
         double maxGain = 0;
         for (String eachFeat : features) {
-            double infoGain = infoGain(eachFeat, "label", shrooms);
+            double infoGain = infoGain(eachFeat, shrooms);
 
             if (infoGain > maxGain) {
                 maxGain = infoGain;
@@ -107,12 +110,12 @@ public class Main {
         //For each value of the feature (e.g. sweet, spicy, mild)
         //enact again ID3 using only the surviving shrooms
 
-        for (String nextAtt : featureList.get(bestFeature)) {
+        for (int nextAtt : featureList.get(bestFeature)) {
             //Construct Sv (subset of shrooms that have the specified value/attribute of the bestFeature)
-            ArrayList<Mushroom> nextShrooms = new ArrayList<Mushroom>();
+            ArrayList<Mushroom> nextShrooms = new ArrayList<>();
 
             for (Mushroom shroom : shrooms) {
-                if (shroom.getAtt(bestFeature).equals(nextAtt)) {
+                if (shroom.getAtt(bestFeature) == nextAtt) {
                     nextShrooms.add(shroom);
                 }
             }
@@ -134,29 +137,28 @@ public class Main {
 
     /**
      * Calculate the information gain of a feature across the given shrooms
+     * Gain(for set S, attribute A)  =  Entropy(on set S) - SUM_for_all_v_in_A( (|Sv| / |S|) * Entropy(on set Sv) )
+     * Sv = subset of examples where attribute A has value V
      *
-     * @param feature
-     * @param label the key for
-     * @param shrooms
+     * @param feature the feature to check for information gain
+     * @param shrooms the set of current shrooms
      * @return the amount of information gain
      */
     private static double infoGain(String feature, ArrayList<Mushroom> shrooms) {
-        double bigEntropy = entropy(label, shrooms);
+        double bigEntropy = entropy(shrooms); //Entropy of set S
+        double expectedEntropy = 0; //Entropy(on set Sv)
 
-        ArrayList<Integer> labelValues = new ArrayList<>(featureList.get(label));
+        for (int att : featureList.get(feature)) {
 
-        double expectedEntropy = 0;
-
-        for (String att : featureList.get(feature)) {
             //get the subset of shrooms with each value of the feature
-            ArrayList<Mushroom> nextShrooms = new ArrayList<Mushroom>();
+            ArrayList<Mushroom> nextShrooms = new ArrayList<>();
             for (Mushroom shroom : shrooms) {
-                if (shroom.getAtt(feature).equals(att)) {
+                if (shroom.getAtt(feature) == att) {
                     nextShrooms.add(shroom);
                 }
             }
 
-            double thisEntropy = entropy(label, nextShrooms);
+            double thisEntropy = entropy(nextShrooms);
 
             expectedEntropy += (((double) (nextShrooms.size()) / (double) (shrooms.size())) * thisEntropy);
 
@@ -166,26 +168,42 @@ public class Main {
         return bigEntropy - expectedEntropy;
     }
 
+    /**
+     * Entropy = -(pPos)log(pPos) - (pNeg)log(pNeg)
+     *
+     * @param shrooms Set to measure entropy across
+     * @return a double representing entropy
+     */
+    @SuppressWarnings("Duplicates")
     private static double entropy(ArrayList<Mushroom> shrooms) {
-        int[] valueCounts = new int[2];
-        Arrays.fill(valueCounts, 0);
+        int pPos = 0;
+        int pNeg = 0;
 
         double total = shrooms.size();
 
         for (Mushroom shroom : shrooms) {
             boolean value = shroom.getLabel();
-            valueCounts[labelValues.indexOf(value)]++;
+            if (value)
+                pPos++;
+            else
+                pNeg++;
         }
-
 
         double entropy = 0;
 
-        for (double eachP : valueCounts) {
-            if (eachP == 0.0)
-                continue;
+        double proportion = 0;
+        double logResult = 0;
+        //-(pPos)log(pPos)
+        if (pPos > 0) {
+            proportion = (pPos / total);
+            logResult = logBase2(proportion);
+            entropy -= (proportion * logResult);
+        }
 
-            double proportion = (eachP / total);
-            double logResult = logBase2(proportion);
+        if (pNeg > 0) {
+            //- (pNeg)log(pNeg)
+            proportion = (pNeg / total);
+            logResult = logBase2(proportion);
             entropy -= (proportion * logResult);
         }
 
