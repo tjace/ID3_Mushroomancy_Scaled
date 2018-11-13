@@ -1,9 +1,5 @@
 package ID3;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.*;
 
 public class Main {
@@ -23,23 +19,25 @@ public class Main {
         else
             fileName = args[0];
 
+        //Add the many lists to featureList
+        featureList = new HashMap<>();
+        for (String feat : Mushroom.getFeatureList()) {
+            featureList.put(feat, new ArrayList<>());
+        }
+
         //createShrooms("src/train.csv");
         ArrayList<Mushroom> trainShrooms = Utils.readExamples(fileName);
-
 
         ArrayList<Mushroom> shrooms = new ArrayList<>(trainShrooms);
 
         for (Mushroom mush : trainShrooms) {
 
             //Grab each unique value for each feature, and add it to featureList
-            for (String feat : Mushroom.featureList) {
-                int att = mush.getAtt(feat);
+            for (String eachFeature : mush.features.keySet()) {
 
-                if (!featureList.get(feat).contains(att)) {
-                    featureList.get(feat).add(att);
-                }
+                if (!featureList.get(eachFeature).contains(mush.getAtt(eachFeature)))
+                    featureList.get(eachFeature).add(mush.getAtt(eachFeature));
             }
-
         }
 
         HashSet<String> feats = new HashSet<>(featureList.keySet());
@@ -194,14 +192,12 @@ public class Main {
     /**
      * Returns the most common label.
      *
-     * @param shrooms
+     * @param shrooms the set of examples to check for common label
      * @return either "+1" or "-1"
      */
     private static String findCommonLabel(ArrayList<Mushroom> shrooms) {
         int pos = 0;
         int neg = 0;
-
-        String maxLabel = "";
 
         for (Mushroom mush : shrooms) {
             boolean label = mush.getLabel();
@@ -280,7 +276,7 @@ public class Main {
     }
 
 
-    /**
+    /*
      * Creates one array of shrooms from multiple files.
      */
     /*

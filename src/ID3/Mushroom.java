@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 public class Mushroom {
-    public static ArrayList<String> featureList;
+    private static ArrayList<String> featureList;
     public HashMap<String, Integer> features;
     private boolean label;
 
@@ -23,9 +23,13 @@ public class Mushroom {
                     label = true;
                     break;
                 default:
-                    String[] splits = each.split(":");
-                    features.put(splits[0], Integer.parseInt(splits[1]));
+                    String[] splits = each.split(":"); //splits[0] == feature, splits[1] == value of that feature
+                    String feature = splits[0];
+                    int value = Integer.parseInt(splits[1]);
 
+                    features.put(feature, value);
+                    if (!featureList.contains(feature))
+                        featureList.add(feature);
             }
         }
     }
@@ -34,8 +38,8 @@ public class Mushroom {
         return features.get(feature);
     }
 
-    Set<String> getAllKeys() {
-        return features.keySet();
+    static ArrayList<String> getFeatureList() {
+        return featureList;
     }
 
     boolean getLabel() {
