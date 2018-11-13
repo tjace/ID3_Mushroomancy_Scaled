@@ -132,10 +132,18 @@ public class Main {
         return thisNode;
     }
 
-    private static double infoGain(String feature, String label, ArrayList<Mushroom> shrooms) {
+    /**
+     * Calculate the information gain of a feature across the given shrooms
+     *
+     * @param feature
+     * @param label the key for
+     * @param shrooms
+     * @return the amount of information gain
+     */
+    private static double infoGain(String feature, ArrayList<Mushroom> shrooms) {
         double bigEntropy = entropy(label, shrooms);
 
-        ArrayList<String> labelValues = new ArrayList<>(featureList.get(label));
+        ArrayList<Integer> labelValues = new ArrayList<>(featureList.get(label));
 
         double expectedEntropy = 0;
 
@@ -158,9 +166,8 @@ public class Main {
         return bigEntropy - expectedEntropy;
     }
 
-    private static double entropy(String label, ArrayList<Mushroom> shrooms) {
-        ArrayList<String> labelValues = new ArrayList<>(featureList.get(label));
-        int[] valueCounts = new int[labelValues.size()];
+    private static double entropy(ArrayList<Mushroom> shrooms) {
+        int[] valueCounts = new int[2];
         Arrays.fill(valueCounts, 0);
 
         double total = shrooms.size();
@@ -185,6 +192,9 @@ public class Main {
         return entropy;
     }
 
+    /**
+     * Returns log base 2 of the input.
+     */
     private static double logBase2(double input) {
         return Math.log(input) / Math.log(2);
     }
