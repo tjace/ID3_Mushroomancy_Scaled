@@ -6,7 +6,7 @@ import java.util.Set;
 
 public class Mushroom {
     private static ArrayList<String> featureList = new ArrayList<>();
-    public HashMap<String, Integer> features;
+    HashMap<String, Integer> features;
     private boolean label;
 
 
@@ -17,9 +17,11 @@ public class Mushroom {
         for (String each : pieces) {
             switch (each) {
                 case "-1":
+                case "0":
                     label = false;
                     break;
                 case "+1":
+                case "1":
                     label = true;
                     break;
                 default:
@@ -44,6 +46,11 @@ public class Mushroom {
 
     boolean getLabel() {
         return label;
+    }
+
+    boolean hasFeature(String feature)
+    {
+        return features.containsKey(feature);
     }
 
     @Override

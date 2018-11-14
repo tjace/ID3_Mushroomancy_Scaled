@@ -3,66 +3,81 @@ package ID3;
 import java.util.*;
 
 public class Main {
-    //The list of shrooms.  Constantly queried.
 
     //A list of features mapped to possible answers
     private static HashMap<String, ArrayList<Integer>> featureList;
-
-
     private static boolean DEBUG = true;
+
+    private static final String finalTrain = "src/finalFiles/data.train";
+    private static final String finalTest = "src/finalFiles/data.test";
+    private static final String finalEval = "src/finalFiles/data.eval.anon";
+    private static final String finalEvalIDs = "src/finalFiles/data.eval.anon.id";
+    private static final String finalOutput = "src/finalFiles/output";
 
 
     public static void main(String[] args) throws Exception {
-        String fileName;
-        if (args.length == 0)
-            fileName = "src/Mango.csv";
-        else
-            fileName = args[0];
+        featureList = new HashMap<>();
 
-        //createShrooms("src/train.csv");
+        //Utils.oldStuff(featureList);
+        kaggle();
+
+
+    }
+
+    @SuppressWarnings("Duplicates")
+    private static void kaggle() throws Exception {
+        String fileName = finalTrain;
+
+        System.out.println("Reading shrooms...");
+        //Create the list of examples
         ArrayList<Mushroom> trainShrooms = Utils.readExamples(fileName);
 
-        //Add the many lists to featureList
-        featureList = new HashMap<>();
+        System.out.println("populating massive feature list...");
+        //Add the many, many features to featureList
         for (String feat : Mushroom.getFeatureList()) {
             featureList.put(feat, new ArrayList<>());
         }
+
+        //Create a separate list with the same training examples?
         ArrayList<Mushroom> shrooms = new ArrayList<>(trainShrooms);
 
+        System.out.println("populating massive feature list with all possible attributes.......");
         for (Mushroom mush : trainShrooms) {
 
             //Grab each unique value for each feature, and add it to featureList
+            //This is needed for use in the ID3 algorithm/method in the form of "feats" below.
             for (String eachFeature : mush.features.keySet()) {
-
-
-                ArrayList<Integer> test = featureList.get(eachFeature); //this is null?
-
+                ArrayList<Integer> test = featureList.get(eachFeature);
 
                 if (!featureList.get(eachFeature).contains(mush.getAtt(eachFeature)))
                     featureList.get(eachFeature).add(mush.getAtt(eachFeature));
             }
         }
 
+        //This travel-size list of features is used by ID3
         HashSet<String> feats = new HashSet<>(featureList.keySet());
-        feats.remove("label");
 
-        Node root = ID3(shrooms, feats, 1, -1);
+        System.out.println("running ID3....................");
+        //Construct the tree and return the root
+        Node root = Main.ID3(shrooms, feats, 1, -1);
 
         if (DEBUG) System.out.println(root.name);
 
         int maxDepth = root.findMaxDepth();
 
-        double error = shroomError(root, fileName);
+        double error = Utils.shroomError(root, fileName);
         System.out.println("Error: " + error);
         System.out.println("Max depth: " + maxDepth);
 
-
+        //Now is the time for use to construct our file.
+        ArrayList<Mushroom> finalEvalShrooms = Utils.readExamples(finalEval);
+        Utils.printTestGuesses(root, finalEvalShrooms, finalEvalIDs, finalOutput);
     }
 
     /**
      * if maxDepth == -1, there is no max.
      */
-    private static Node ID3(ArrayList<Mushroom> shrooms, HashSet<String> features, int depth, int maxDepth) throws Exception {
+    static Node ID3(ArrayList<Mushroom> shrooms, HashSet<String> features, int depth, int maxDepth) throws Exception {
         //If all shrooms have the same label, return a leaf with that label
         int sameyLabel = checkAllSameLabel(shrooms);
         if (sameyLabel == 1)
@@ -88,7 +103,7 @@ public class Main {
 
         //Determine best feature to discriminate by at this point
         //Using InfoGain
-        String bestFeature = "no";
+        String bestFeature = "warui desu.";
 
         double maxGain = 0;
         for (String eachFeat : features) {
@@ -153,8 +168,10 @@ public class Main {
             //get the subset of shrooms with each value of the feature
             ArrayList<Mushroom> nextShrooms = new ArrayList<>();
             for (Mushroom shroom : shrooms) {
-                if (shroom.getAtt(feature) == att) {
-                    nextShrooms.add(shroom);
+                if (shroom.hasFeature(feature)) {
+                    if (shroom.getAtt(feature) == att) {
+                        nextShrooms.add(shroom);
+                    }
                 }
             }
 
@@ -191,8 +208,8 @@ public class Main {
 
         double entropy = 0;
 
-        double proportion = 0;
-        double logResult = 0;
+        double proportion;
+        double logResult;
         //-(pPos)log(pPos)
         if (pPos > 0) {
             proportion = (pPos / total);
@@ -223,6 +240,7 @@ public class Main {
      * @param shrooms the set of examples to check for common label
      * @return either "+1" or "-1"
      */
+    @SuppressWarnings("Duplicates")
     private static String findCommonLabel(ArrayList<Mushroom> shrooms) {
         int pos = 0;
         int neg = 0;
@@ -266,43 +284,6 @@ public class Main {
             return -1;
 
     }
-
-    private static double shroomError(Node root, String fileName) throws Exception {
-        int fail = 0;
-
-        ArrayList<Mushroom> testShrooms = Utils.readExamples(fileName);
-
-        for (Mushroom shroom : testShrooms) {
-            Node currentNode = root;
-            boolean expected = shroom.getLabel();  //Actual label for this example
-
-            if (DEBUG) {
-                System.out.println(shroom);
-            }
-
-            StringBuilder debug = new StringBuilder();
-
-            while (!currentNode.isLeaf()) {
-                int nextPath = shroom.getAtt(currentNode.name);
-
-                debug.append(currentNode.name).append(": ").append(nextPath).append(" ==> ");
-
-                currentNode = currentNode.followPath(nextPath);
-            }
-
-            debug.append(currentNode.name);
-            System.out.println(debug + "");
-
-//            if (!expected.equals(currentNode.name))
-//                fail++;
-            if (expected != currentNode.getLabel())
-                fail++;
-
-        }
-
-        return (double) fail / (double) (testShrooms.size());
-    }
-
 
     /*
      * Creates one array of shrooms from multiple files.
