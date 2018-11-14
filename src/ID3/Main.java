@@ -61,13 +61,15 @@ public class Main {
         //Construct the tree and return the root
         Node root = Main.ID3(shrooms, feats, 1, -1);
 
-        if (DEBUG) System.out.println(root.name);
+//        if (DEBUG) System.out.println(root.name);
 
-        int maxDepth = root.findMaxDepth();
+//        int maxDepth = root.findMaxDepth();
 
-        double error = Utils.shroomError(root, fileName);
-        System.out.println("Error: " + error);
-        System.out.println("Max depth: " + maxDepth);
+//        double error = Utils.shroomError(root, fileName);
+//        System.out.println("Error: " + error);
+//        System.out.println("Max depth: " + maxDepth);
+
+        System.out.println("done with ID3, now creating output!");
 
         //Now is the time for use to construct our file.
         ArrayList<Mushroom> finalEvalShrooms = Utils.readExamples(finalEval);
@@ -130,8 +132,10 @@ public class Main {
             ArrayList<Mushroom> nextShrooms = new ArrayList<>();
 
             for (Mushroom shroom : shrooms) {
-                if (shroom.getAtt(bestFeature) == nextAtt) {
-                    nextShrooms.add(shroom);
+                if (shroom.hasFeature(bestFeature)) {
+                    if (shroom.getAtt(bestFeature) == nextAtt) {
+                        nextShrooms.add(shroom);
+                    }
                 }
             }
 
