@@ -70,7 +70,6 @@ public class Utils {
     /**
      * Returns the tree's guess for the example.
      */
-
     static boolean sgn(Node root, Mushroom shroom, ArrayList<Mushroom> testShrooms) throws Exception {
         StringBuilder debug = new StringBuilder();
         Node currentNode = root;
